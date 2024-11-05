@@ -49,7 +49,6 @@ blueprint:
           unit_of_measurement: seconds
           step: 1.0
           mode: slider
-  source_url: https://gist.github.com/Redblockmasteur/d3602266850016123b55d278f95ba8d4
 variables:
   window_sensor: !input window_sensor
   target_climate: !input target_climate
