@@ -50,30 +50,37 @@ blueprint:
           step: 1.0
           mode: slider
   source_url: https://gist.github.com/Redblockmasteur/d3602266850016123b55d278f95ba8d4
+variables:
+  window_sensor: !input window_sensor
+  target_climate: !input target_climate
+  window_open_delay: !input window_open_delay
+  window_close_delay: !input window_close_delay
+
 trigger:
-- platform: state
-  entity_id: !input window_sensor
+  - platform: state
+    entity_id: !input window_sensor
+
 action:
-- choose:
-  - conditions:
-      - condition: state
-        entity_id: !input window_sensor
-        state: 'on'
-    sequence:
-      - delay: !input window_open_delay
-      - service: climate.turn_off
-        target:
-          entity_id: !input target_climate
-      - service: scene.create
-        data:
-          scene_id: "{{ target_climate.entity_id | replace('.', '_') }}_snapshot"
-          snapshot_entities: !input target_climate
-  - conditions:
-      - condition: state
-        entity_id: !input window_sensor
-        state: 'off'
-    sequence:
-      - delay: !input window_close_delay
-      - service: scene.turn_on
-        target:
-          entity_id: "scene.{{ target_climate.entity_id | replace('.', '_') }}_snapshot"
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input window_sensor
+            state: 'on'
+        sequence:
+          - delay: !input window_open_delay
+          - service: climate.turn_off
+            target:
+              entity_id: !input target_climate
+          - service: scene.create
+            data:
+              scene_id: "{{ target_climate | replace('.', '_') }}_snapshot"
+              snapshot_entities: !input target_climate
+      - conditions:
+          - condition: state
+            entity_id: !input window_sensor
+            state: 'off'
+        sequence:
+          - delay: !input window_close_delay
+          - service: scene.turn_on
+            target:
+              entity_id: "scene.{{ target_climate | replace('.', '_') }}_snapshot"
