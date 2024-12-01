@@ -1,6 +1,8 @@
 blueprint:
   name: Recycle Reminder
-  description: Sends a notification at a specific time if an entity matches tomorrow's date.
+  description: >
+    Sends a notification at a specific time if the value of the selected entity 
+    ({{ entity }}) matches tomorrow's date.
   domain: automation
   input:
     entity:
@@ -14,13 +16,12 @@ blueprint:
       description: The time to trigger the notification.
       selector:
         time: {}
-    notification_services:
-      name: Notification Services
-      description: List of notification services to send the message to.
+    device:
+      name: Device to Notify
+      description: The device to send the notification to.
       selector:
-        target:
-          entity:
-            domain: notify
+        device:
+          integration: mobile_app
     notification_title:
       name: Notification Title
       description: Title for the notification.
@@ -30,7 +31,9 @@ blueprint:
           multiline: false
     notification_message:
       name: Notification Message
-      description: Message for the notification.
+      description: >
+        Message for the notification. Include a reminder such as "Take out the 
+        recycling for {{ entity }}."
       default: Remember to take out the recycling!
       selector:
         text:
@@ -46,8 +49,7 @@ condition:
       {{ states(input.entity) == (now().date() + timedelta(days=1)).strftime('%Y-%m-%d') }}
 
 action:
-  - service: notify
-    target: !input notification_services
+  - service: notify.mobile_app_{{ device_id }}
     data:
       title: !input notification_title
       message: !input notification_message
