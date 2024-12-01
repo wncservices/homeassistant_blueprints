@@ -1,34 +1,32 @@
 blueprint:
   name: WindowGuard Climate Control
-  description: This blueprint intelligently manages your heating or cooling systems
-    based on window sensor activity, conserving energy by suspending climate control
-    when a window is open and restoring settings after user-defined delays for opening
-    and closing the window.
+  description: >
+    This blueprint intelligently manages your heating or cooling systems
+    based on window sensor activity. It conserves energy by suspending climate control
+    when a window is open and restores the HVAC mode to 'auto' after a user-defined delay when the window is closed.
   domain: automation
   input:
     window_sensor:
       name: Window Sensor
-      description: Select the sensor that monitors your windows. Useful for controlling
+      description: >
+        Select the sensor that monitors your windows. Useful for controlling
         heating or cooling based on window status.
       selector:
         entity:
-          domain:
-          - binary_sensor
-          device_class:
-          - window
-          multiple: false
+          domain: binary_sensor
+          device_class: window
     target_climate:
       name: Climate Control Entity
-      description: Choose the climate control entity to manage, like your heater,
+      description: >
+        Choose the climate control entity to manage, like your heater,
         AC, or thermostat.
       selector:
         entity:
-          domain:
-          - climate
-          multiple: false
+          domain: climate
     window_open_delay:
       name: Delay After Window Opens
-      description: Time to wait after the window opens before suspending climate control.
+      description: >
+        Time to wait after the window opens before suspending climate control.
       default: 0
       selector:
         number:
@@ -39,8 +37,9 @@ blueprint:
           mode: slider
     window_close_delay:
       name: Delay After Window Closes
-      description: Time to wait after the window closes before restoring climate control
-        settings.
+      description: >
+        Time to wait after the window closes before restoring climate control
+        to auto mode.
       default: 0
       selector:
         number:
@@ -49,11 +48,6 @@ blueprint:
           unit_of_measurement: seconds
           step: 1.0
           mode: slider
-variables:
-  window_sensor: !input window_sensor
-  target_climate: !input target_climate
-  window_open_delay: !input window_open_delay
-  window_close_delay: !input window_close_delay
 
 trigger:
   - platform: state
@@ -61,6 +55,7 @@ trigger:
 
 action:
   - choose:
+      # When the window is opened
       - conditions:
           - condition: state
             entity_id: !input window_sensor
@@ -70,16 +65,18 @@ action:
           - service: climate.turn_off
             target:
               entity_id: !input target_climate
-          - service: scene.create
-            data:
-              scene_id: "{{ target_climate | replace('.', '_') }}_snapshot"
-              snapshot_entities: !input target_climate
+
+      # When the window is closed
       - conditions:
           - condition: state
             entity_id: !input window_sensor
             state: 'off'
         sequence:
           - delay: !input window_close_delay
-          - service: scene.turn_on
+          - service: climate.set_hvac_mode
             target:
-              entity_id: "scene.{{ target_climate | replace('.', '_') }}_snapshot"
+              entity_id: !input target_climate
+            data:
+              hvac_mode: 'auto'
+    default: []
+mode: single
