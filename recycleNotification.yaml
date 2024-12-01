@@ -1,0 +1,54 @@
+blueprint:
+  name: Recycle Reminder
+  description: Sends a notification at a specific time if an entity matches tomorrow's date.
+  domain: automation
+  input:
+    entity:
+      name: Entity
+      description: The entity to check (must return a date in 'YYYY-MM-DD' format).
+      selector:
+        entity:
+          domain: sensor
+    time:
+      name: Notification Time
+      description: The time to trigger the notification.
+      selector:
+        time: {}
+    notification_services:
+      name: Notification Services
+      description: List of notification services to send the message to.
+      selector:
+        target:
+          entity:
+            domain: notify
+    notification_title:
+      name: Notification Title
+      description: Title for the notification.
+      default: Recycle Reminder
+      selector:
+        text:
+          multiline: false
+    notification_message:
+      name: Notification Message
+      description: Message for the notification.
+      default: Remember to take out the recycling!
+      selector:
+        text:
+          multiline: true
+
+trigger:
+  - platform: time
+    at: !input time
+
+condition:
+  - condition: template
+    value_template: >
+      {{ states(input.entity) == (now().date() + timedelta(days=1)).strftime('%Y-%m-%d') }}
+
+action:
+  - service: notify
+    target: !input notification_services
+    data:
+      title: !input notification_title
+      message: !input notification_message
+mode: single
