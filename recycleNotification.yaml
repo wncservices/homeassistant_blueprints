@@ -14,13 +14,6 @@ blueprint:
       description: The time to trigger the notification.
       selector:
         time: {}
-    devices:
-      name: Devices to Notify
-      description: Select one or more devices to send the notification to.
-      selector:
-        target:
-          entity:
-            domain: notify
     notification_title:
       name: Notification Title
       description: Title for the notification.
@@ -31,12 +24,15 @@ blueprint:
     notification_message:
       name: Notification Message
       description: >
-        Message for the notification. Include a reminder such as "Take out the 
+        Message for the notification. Include a reminder such as "Take out the
         recycling."
       default: Remember to take out the recycling!
       selector:
         text:
           multiline: true
+
+variables:
+  entity_id: !input entity
 
 trigger:
   - platform: time
@@ -45,11 +41,10 @@ trigger:
 condition:
   - condition: template
     value_template: >
-      {{ states(input.entity) == (now().date() + timedelta(days=1)).strftime('%Y-%m-%d') }}
+      {{ states(entity_id) == (now().date() + timedelta(days=1)).strftime('%Y-%m-%d') }}
 
 action:
-  - service: notify
-    target: !input devices
+  - service: notify.all_devices
     data:
       title: !input notification_title
       message: !input notification_message
